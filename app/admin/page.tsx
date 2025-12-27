@@ -23,8 +23,8 @@ type User = {
   email: string;
   full_name: string;
   role: "admin" | "instructor";
+  active: boolean;
 };
-
 
 
 
@@ -866,6 +866,25 @@ export default function AdminPage() {
     }
   };
 
+  const deleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`האם להסיר את המשתמש "${userName}"?\nההיסטוריה שלו תישמר.`)) return;
+
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      if (res.ok) {
+        fetchUsers();
+      } else {
+        const data = await res.json();
+        alert(data.error || "שגיאה");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
 
 
@@ -1051,14 +1070,27 @@ export default function AdminPage() {
                         {user.role === "admin" ? "מנהל" : "מדריך"}
                       </span>
                     </td>
+
+
+
                     <td className="p-3">
-                      <button
-                        onClick={() => toggleRole(user.id, user.role)}
-                        className={`px-3 py-1 rounded text-sm ${user.role === "admin" ? "bg-orange-100 text-orange-800 hover:bg-orange-200" : "bg-green-100 text-green-800 hover:bg-green-200"}`}
-                      >
-                        {user.role === "admin" ? "הפוך למדריך" : "הפוך למנהל"}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleRole(user.id, user.role)}
+                          className={`px-3 py-1 rounded text-sm ${user.role === "admin" ? "bg-orange-100 text-orange-800 hover:bg-orange-200" : "bg-green-100 text-green-800 hover:bg-green-200"}`}
+                        >
+                          {user.role === "admin" ? "הפוך למדריך" : "הפוך למנהל"}
+                        </button>
+                        <button
+                          onClick={() => deleteUser(user.id, user.full_name || user.email)}
+                          className="px-3 py-1 rounded text-sm bg-red-100 text-red-800 hover:bg-red-200"
+                        >
+                          🗑️ הסר
+                        </button>
+                      </div>
                     </td>
+
+
                   </tr>
                 ))}
               </tbody>
