@@ -318,7 +318,6 @@ function AttendanceTab({ records, loading }: { records: AttendanceRecord[]; load
                 <th className="p-3 text-right">בית ספר</th>
                 <th className="p-3 text-right">עיר</th>
                 <th className="p-3 text-right">שעות</th>
-                <th className="p-3 text-right">סה״כ</th>
               </tr>
             </thead>
             <tbody>
@@ -336,7 +335,6 @@ function AttendanceTab({ records, loading }: { records: AttendanceRecord[]; load
                     <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
                     <td className="p-3">{record.school_name}</td>
                     <td className="p-3">{record.city || "-"}</td>
-                    <td className="p-3">{record.start_time?.slice(0, 5)} - {record.end_time?.slice(0, 5)}</td>
                     <td className="p-3 font-semibold">{record.hours}</td>
                   </tr>
                 ))
@@ -1197,7 +1195,7 @@ export default function AdminPage() {
               <tbody>
                 {getFilteredSchedules().length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-4 text-center text-gray-400">
+                    <td colSpan={6} className="p-4 text-center text-gray-400">
                       אין שיעורים ביום {daysOfWeek.find(d => d.key === selectedDay)?.label}
                     </td>
                   </tr>

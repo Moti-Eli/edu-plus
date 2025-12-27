@@ -576,9 +576,7 @@ export default function Chat({ userName, isAdmin }: { userName?: string; isAdmin
                     <td className="p-2 text-sm">{new Date(record.date).toLocaleDateString("he-IL")}</td>
                     <td className="p-2 text-sm">{record.school_name}</td>
                     <td className="p-2 text-sm">{record.city || "-"}</td>
-                    <td className="p-2 text-sm">
-                      {record.start_time?.slice(0, 5)} - {record.end_time?.slice(0, 5)} ({record.hours})
-                    </td>
+                    <td className="p-2 text-sm font-semibold">{record.hours}</td>
                     <td className="p-2 text-sm">
                       <button
                         onClick={() => deleteRecord(record.id)}
