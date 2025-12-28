@@ -398,7 +398,12 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
 }
 
 // קומפוננטת טאב סטטיסטיקות
-function StatsTab({ records, adminRecords }: { records: AttendanceRecord[]; adminRecords: AdminAttendanceRecord[] }) {
+function StatsTab({ records, adminRecords, users, schedules }: { 
+  records: AttendanceRecord[]; 
+  adminRecords: AdminAttendanceRecord[];
+  users: User[];
+  schedules: Schedule[];
+}) {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
 
   const getMonths = () => {
@@ -519,56 +524,139 @@ function StatsTab({ records, adminRecords }: { records: AttendanceRecord[]; admi
     return stats;
   };
 
-  // מיזוג סטטיסטיקות מדריכים
+  // מיזוג סטטיסטיקות מדריכים - כולל כל המדריכים הפעילים
   const getMergedInstructorStats = () => {
     const instructorStats = getInstructorStats();
     const adminStats = getAdminInstructorStats();
     
-    const allNames = new Set([
-      ...instructorStats.map(s => s.name),
-      ...Array.from(adminStats.values()).map(s => s.name)
-    ]);
+    // התחל עם כל המדריכים מטבלת users
+    const allInstructors = users
+      .filter(u => u.role === "instructor" || u.role === "admin")
+      .map(u => ({
+        name: u.full_name || u.email,
+        email: u.email,
+        instructorHours: 0,
+        instructorReports: 0,
+        adminHours: 0,
+        adminReports: 0,
+        mismatch: false
+      }));
 
-    return Array.from(allNames).map(name => {
-      const instructor = instructorStats.find(s => s.name === name);
-      const admin = adminStats.get(name);
-      
-      return {
-        name,
-        email: instructor?.email || admin?.email || "",
-        instructorHours: instructor?.hours || 0,
-        instructorReports: instructor?.reports || 0,
-        adminHours: admin?.hours || 0,
-        adminReports: admin?.reports || 0,
-        mismatch: (instructor?.hours || 0) !== (admin?.hours || 0)
-      };
-    }).sort((a, b) => b.instructorHours - a.instructorHours);
+    // עדכן עם נתונים מדיווחי מדריכים
+    instructorStats.forEach(stat => {
+      const existing = allInstructors.find(i => i.email === stat.email || i.name === stat.name);
+      if (existing) {
+        existing.instructorHours = stat.hours;
+        existing.instructorReports = stat.reports;
+      } else {
+        allInstructors.push({
+          name: stat.name,
+          email: stat.email,
+          instructorHours: stat.hours,
+          instructorReports: stat.reports,
+          adminHours: 0,
+          adminReports: 0,
+          mismatch: false
+        });
+      }
+    });
+
+    // עדכן עם נתונים מדיווחי מנהל
+    Array.from(adminStats.values()).forEach(stat => {
+      const existing = allInstructors.find(i => i.email === stat.email || i.name === stat.name);
+      if (existing) {
+        existing.adminHours = stat.hours;
+        existing.adminReports = stat.reports;
+      } else {
+        allInstructors.push({
+          name: stat.name,
+          email: stat.email,
+          instructorHours: 0,
+          instructorReports: 0,
+          adminHours: stat.hours,
+          adminReports: stat.reports,
+          mismatch: false
+        });
+      }
+    });
+
+    // חשב mismatch
+    allInstructors.forEach(i => {
+      i.mismatch = i.instructorHours !== i.adminHours;
+    });
+
+    // מיין לפי א-ב
+    return allInstructors.sort((a, b) => a.name.localeCompare(b.name, 'he'));
   };
 
-  // מיזוג סטטיסטיקות בתי ספר
+  // מיזוג סטטיסטיקות בתי ספר - כולל כל בתי הספר ממערכת השעות
   const getMergedSchoolStats = () => {
     const schoolStats = getSchoolStats();
     const adminStats = getAdminSchoolStats();
     
-    const allSchools = new Set([
-      ...schoolStats.map(s => s.school),
-      ...Array.from(adminStats.values()).map(s => s.school)
-    ]);
+    // התחל עם כל בתי הספר ממערכת השעות
+    const uniqueSchools = new Map<string, { school: string; city: string }>();
+    schedules.forEach(s => {
+      if (!uniqueSchools.has(s.school_name)) {
+        uniqueSchools.set(s.school_name, { school: s.school_name, city: s.city });
+      }
+    });
 
-    return Array.from(allSchools).map(school => {
-      const fromInstructor = schoolStats.find(s => s.school === school);
-      const fromAdmin = adminStats.get(school);
-      
-      return {
-        school,
-        city: fromInstructor?.city || fromAdmin?.city || "-",
-        instructorHours: fromInstructor?.hours || 0,
-        instructorReports: fromInstructor?.reports || 0,
-        adminHours: fromAdmin?.hours || 0,
-        adminReports: fromAdmin?.reports || 0,
-        mismatch: (fromInstructor?.hours || 0) !== (fromAdmin?.hours || 0)
-      };
-    }).sort((a, b) => b.instructorHours - a.instructorHours);
+    const allSchools = Array.from(uniqueSchools.values()).map(s => ({
+      school: s.school,
+      city: s.city,
+      instructorHours: 0,
+      instructorReports: 0,
+      adminHours: 0,
+      adminReports: 0,
+      mismatch: false
+    }));
+
+    // עדכן עם נתונים מדיווחי מדריכים
+    schoolStats.forEach(stat => {
+      const existing = allSchools.find(s => s.school === stat.school);
+      if (existing) {
+        existing.instructorHours = stat.hours;
+        existing.instructorReports = stat.reports;
+      } else {
+        allSchools.push({
+          school: stat.school,
+          city: stat.city,
+          instructorHours: stat.hours,
+          instructorReports: stat.reports,
+          adminHours: 0,
+          adminReports: 0,
+          mismatch: false
+        });
+      }
+    });
+
+    // עדכן עם נתונים מדיווחי מנהל
+    Array.from(adminStats.values()).forEach(stat => {
+      const existing = allSchools.find(s => s.school === stat.school);
+      if (existing) {
+        existing.adminHours = stat.hours;
+        existing.adminReports = stat.reports;
+      } else {
+        allSchools.push({
+          school: stat.school,
+          city: stat.city,
+          instructorHours: 0,
+          instructorReports: 0,
+          adminHours: stat.hours,
+          adminReports: stat.reports,
+          mismatch: false
+        });
+      }
+    });
+
+    // חשב mismatch
+    allSchools.forEach(s => {
+      s.mismatch = s.instructorHours !== s.adminHours;
+    });
+
+    // מיין לפי א-ב
+    return allSchools.sort((a, b) => a.school.localeCompare(b.school, 'he'));
   };
 
 
@@ -1521,7 +1609,7 @@ export default function AdminPage() {
 
 
       {activeTab === "stats" && (
-        <StatsTab records={records} adminRecords={adminRecords} />
+        <StatsTab records={records} adminRecords={adminRecords} users={users} schedules={schedules} />
       )}
 
       {activeTab === "users" && (
