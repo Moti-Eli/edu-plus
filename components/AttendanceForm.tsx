@@ -59,6 +59,14 @@ export default function AttendanceForm() {
     friday: "שישי",
   };
 
+  // בדיקה אם תאריך הוא מהחודש הנוכחי
+  const isCurrentMonth = (date: string) => {
+    const recordDate = new Date(date);
+    const now = new Date();
+    return recordDate.getMonth() === now.getMonth() && 
+           recordDate.getFullYear() === now.getFullYear();
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -165,8 +173,6 @@ export default function AttendanceForm() {
           date: row.date,
           hours: row.hours,
           notes: row.notes,
-          start_time: "00:00",
-          end_time: "00:00",
         }),
       });
 
@@ -182,6 +188,9 @@ export default function AttendanceForm() {
           notes: "",
         };
         setNewRows(updated);
+      } else {
+        const data = await res.json();
+        alert(data.error || "שגיאה בשמירה");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -191,8 +200,13 @@ export default function AttendanceForm() {
   const deleteRecord = async (id: string) => {
     if (!confirm("למחוק דיווח זה?")) return;
     try {
-      const res = await fetch(`/api/attendance/${id}`, { method: "DELETE" });
-      if (res.ok) fetchRecords();
+      const res = await fetch(`/api/attendance?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchRecords();
+      } else {
+        const data = await res.json();
+        alert(data.error || "שגיאה במחיקה");
+      }
     } catch (error) {
       console.error("Error:", error);
     }
@@ -237,20 +251,19 @@ export default function AttendanceForm() {
     return <div className="text-center p-8">טוען...</div>;
   }
 
-
   const exportCsv = () => {
     const headers = ["תאריך", "בית ספר", "עיר", "שעות", "הערות"];
     const rows = filteredRecords.map(record => [
-        new Date(record.date).toLocaleDateString("he-IL"),
-        record.school_name,
-        record.city || "-",
-        String(record.hours),
-        record.notes || "-"
+      new Date(record.date).toLocaleDateString("he-IL"),
+      record.school_name,
+      record.city || "-",
+      String(record.hours),
+      record.notes || "-"
     ]);
 
     let csv = "\uFEFF" + headers.join(",") + "\n";
     rows.forEach(row => {
-        csv += row.map(cell => `"${cell}"`).join(",") + "\n";
+      csv += row.map(cell => `"${cell}"`).join(",") + "\n";
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -259,21 +272,19 @@ export default function AttendanceForm() {
     link.href = url;
     link.download = `דיווחי_נוכחות_${selectedMonth || "all"}.csv`;
     link.click();
-    };
+  };
 
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
-
-
       <div className="p-4 bg-blue-50 border-b flex items-center justify-between">
         <h2 className="font-bold text-lg">📝 דיווח נוכחות - יום {hebrewDays[currentDay]}</h2>
         <button
-            onClick={exportCsv}
-            className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+          onClick={exportCsv}
+          className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
         >
-            📥 ייצוא
+          📥 ייצוא
         </button>
-        </div>
+      </div>
 
       <div className="p-4 bg-gray-50 border-b space-y-3">
         {newRows.map((row, index) => (
@@ -284,7 +295,8 @@ export default function AttendanceForm() {
                 type="date"
                 value={row.date}
                 onChange={(e) => handleRowChange(index, "date", e.target.value)}
-                className="p-2 border rounded text-sm"
+                min={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-01`}
+                className="p-1 border rounded text-sm"
               />
             </div>
 
@@ -402,12 +414,18 @@ export default function AttendanceForm() {
                   <td className="p-3 text-sm">{record.notes || "-"}</td>
                   <td className="p-3 text-sm text-purple-600">{record.admin_notes || "-"}</td>
                   <td className="p-3">
-                    <button
-                      onClick={() => deleteRecord(record.id)}
-                      className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                      🗑️ מחק
-                    </button>
+                    {isCurrentMonth(record.date) ? (
+                      <button
+                        onClick={() => deleteRecord(record.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        🗑️
+                      </button>
+                    ) : (
+                      <span className="text-gray-300 cursor-not-allowed" title="לא ניתן למחוק דיווחים מחודשים קודמים">
+                        🔒
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))
