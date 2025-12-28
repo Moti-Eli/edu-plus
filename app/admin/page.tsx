@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
-import AdminAttendanceForm from "@/components/AdminAttendanceForm";
 
 type AttendanceRecord = {
   id: string;
@@ -20,6 +19,18 @@ type AttendanceRecord = {
   };
 };
 
+
+type AdminAttendanceRecord = {
+  id: string;
+  instructor_name: string;
+  instructor_email: string;
+  school_name: string;
+  city: string;
+  date: string;
+  hours: number;
+};
+
+
 type User = {
   id: string;
   email: string;
@@ -28,14 +39,11 @@ type User = {
   active: boolean;
 };
 
-
-
 type Setting = {
   id: string;
   key: string;
   value: string;
 };
-
 
 type Schedule = {
   id: string;
@@ -50,9 +58,6 @@ type Schedule = {
   day_of_week: string;
 };
 
-
-
-// קומפוננטת טאב דיווחי נוכחות
 // קומפוננטת טאב דיווחי נוכחות
 function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRecord[]; loading: boolean; onRefresh: () => void }) {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
@@ -73,7 +78,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
     return Array.from(months).sort().reverse();
   };
 
-  // רשימות ייחודיות לסינון
   const getUniqueUsers = () => {
     const users = new Map<string, string>();
     records.forEach((r) => {
@@ -111,7 +115,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
   const getFilteredRecords = () => {
     let filtered = records;
 
-    // סינון לפי חודש
     if (selectedMonth) {
       filtered = filtered.filter((record) => {
         const date = new Date(record.date);
@@ -120,21 +123,18 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
       });
     }
 
-    // סינון לפי משתמש
     if (filterUser) {
       filtered = filtered.filter((r) => r.profiles?.email === filterUser);
     }
 
-    // סינון לפי עיר
     if (filterCity) {
       filtered = filtered.filter((r) => r.city === filterCity);
     }
 
-    // סינון לפי בית ספר
     if (filterSchool) {
       filtered = filtered.filter((r) => r.school_name === filterSchool);
     }
-   // סינון לפי תאריך
+
     if (filterDate) {
       filtered = filtered.filter((r) => r.date === filterDate);
     }
@@ -149,28 +149,21 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
   };
 
   const saveAdminNote = async (recordId: string) => {
-    console.log("Saving note:", recordId, editingNoteValue);
     try {
       const res = await fetch("/api/admin/attendance/notes", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recordId, admin_notes: editingNoteValue }),
       });
-      console.log("Response:", res.status);
       if (res.ok) {
         onRefresh();
         setEditingNoteId(null);
         setEditingNoteValue("");
-      } else {
-        const data = await res.json();
-        console.log("Error:", data);
       }
     } catch (error) {
       console.error("Error:", error);
     }
   };
-
-
 
   const clearFilters = () => {
     setFilterUser("");
@@ -178,7 +171,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
     setFilterSchool("");
     setFilterDate("");
   };
-
 
   const exportAttendanceCsv = () => {
     const { downloadCsv, arrayToCsv } = require("@/lib/exportCsv");
@@ -215,8 +207,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
 
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
-      {/* כותרת עם סטטיסטיקות */}
-
       <div className="p-4 bg-gray-50 border-b flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h2 className="font-bold text-lg">📊 כל הדיווחים</h2>
@@ -248,7 +238,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
         </div>
       </div>
 
-      {/* בחירת חודש */}
       {months.length > 0 && (
         <div className="p-3 border-b overflow-x-auto whitespace-nowrap">
           <div className="flex gap-2">
@@ -269,7 +258,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
         </div>
       )}
 
-      {/* סינון */}
       <div className="p-3 border-b bg-gray-50 flex flex-wrap gap-3 items-center">
         <span className="text-sm text-gray-500">🔍 סינון:</span>
         
@@ -306,7 +294,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
           ))}
         </select>
 
-
         <select
           value={filterDate}
           onChange={(e) => setFilterDate(e.target.value)}
@@ -320,8 +307,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
           ))}
         </select>
 
-
-
         {hasFilters && (
           <button
             onClick={clearFilters}
@@ -332,7 +317,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
         )}
       </div>
 
-      {/* טבלה עם גלילה */}
       <div className="max-h-96 overflow-y-auto">
         {loading ? (
           <p className="p-4 text-center text-gray-500">טוען...</p>
@@ -402,7 +386,6 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
                         </span>
                       )}
                     </td>
-
                   </tr>
                 ))
               )}
@@ -415,7 +398,7 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
 }
 
 // קומפוננטת טאב סטטיסטיקות
-function StatsTab({ records, manualRecords }: { records: AttendanceRecord[]; manualRecords: AttendanceRecord[] }) {
+function StatsTab({ records, adminRecords }: { records: AttendanceRecord[]; adminRecords: AdminAttendanceRecord[] }) {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
 
   const getMonths = () => {
@@ -443,7 +426,6 @@ function StatsTab({ records, manualRecords }: { records: AttendanceRecord[]; man
     return date.toLocaleDateString("he-IL", { month: "long", year: "numeric" });
   };
 
-  // חישוב שעות לפי מדריך
   const getInstructorStats = () => {
     const stats = new Map<string, { name: string; email: string; hours: number; reports: number }>();
     
@@ -463,7 +445,6 @@ function StatsTab({ records, manualRecords }: { records: AttendanceRecord[]; man
     return Array.from(stats.values()).sort((a, b) => b.hours - a.hours);
   };
 
-  // חישוב שעות לפי בית ספר
   const getSchoolStats = () => {
     const stats = new Map<string, { school: string; city: string; hours: number; reports: number }>();
     
@@ -484,86 +465,138 @@ function StatsTab({ records, manualRecords }: { records: AttendanceRecord[]; man
   };
 
 
-  // חישוב שעות לפי מדריך - מנוכחות מדריכים
-const getManualInstructorStats = () => {
-  const stats = new Map<string, { name: string; hours: number; reports: number }>();
-  
-  const filteredManual = manualRecords.filter((record) => {
-    if (!selectedMonth) return true;
-    const date = new Date(record.date);
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    return monthKey === selectedMonth;
-  });
-
-  filteredManual.forEach((record) => {
-    const name = record.instructor_name || "לא ידוע";
+  // חישוב שעות לפי מדריך - מדיווחי מנהל
+  const getAdminInstructorStats = () => {
+    const stats = new Map<string, { name: string; email: string; hours: number; reports: number }>();
     
-    if (!stats.has(name)) {
-      stats.set(name, { name, hours: 0, reports: 0 });
-    }
+    const filteredAdmin = adminRecords.filter((record) => {
+      if (!selectedMonth) return true;
+      const date = new Date(record.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      return monthKey === selectedMonth;
+    });
+
+    filteredAdmin.forEach((record) => {
+      const email = record.instructor_email || "unknown";
+      const name = record.instructor_name || email;
+      
+      if (!stats.has(name)) {
+        stats.set(name, { name, email, hours: 0, reports: 0 });
+      }
+      
+      const current = stats.get(name)!;
+      current.hours += Number(record.hours);
+      current.reports += 1;
+    });
+
+    return stats;
+  };
+
+  // חישוב שעות לפי בית ספר - מדיווחי מנהל
+  const getAdminSchoolStats = () => {
+    const stats = new Map<string, { school: string; city: string; hours: number; reports: number }>();
     
-    const current = stats.get(name)!;
-    current.hours += Number(record.hours);
-    current.reports += 1;
-  });
+    const filteredAdmin = adminRecords.filter((record) => {
+      if (!selectedMonth) return true;
+      const date = new Date(record.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      return monthKey === selectedMonth;
+    });
 
-  return Array.from(stats.values()).sort((a, b) => b.hours - a.hours);
-};
+    filteredAdmin.forEach((record) => {
+      const school = record.school_name || "לא ידוע";
+      const city = record.city || "-";
+      
+      if (!stats.has(school)) {
+        stats.set(school, { school, city, hours: 0, reports: 0 });
+      }
+      
+      const current = stats.get(school)!;
+      current.hours += Number(record.hours);
+      current.reports += 1;
+    });
 
-// חישוב שעות לפי בית ספר - מנוכחות מדריכים
-const getManualSchoolStats = () => {
-  const stats = new Map<string, { school: string; city: string; hours: number; reports: number }>();
-  
-  const filteredManual = manualRecords.filter((record) => {
-    if (!selectedMonth) return true;
-    const date = new Date(record.date);
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    return monthKey === selectedMonth;
-  });
+    return stats;
+  };
 
-  filteredManual.forEach((record) => {
-    const school = record.school_name || "לא ידוע";
-    const city = record.city || "-";
+  // מיזוג סטטיסטיקות מדריכים
+  const getMergedInstructorStats = () => {
+    const instructorStats = getInstructorStats();
+    const adminStats = getAdminInstructorStats();
     
-    if (!stats.has(school)) {
-      stats.set(school, { school, city, hours: 0, reports: 0 });
-    }
-    
-    const current = stats.get(school)!;
-    current.hours += Number(record.hours);
-    current.reports += 1;
-  });
+    const allNames = new Set([
+      ...instructorStats.map(s => s.name),
+      ...Array.from(adminStats.values()).map(s => s.name)
+    ]);
 
-  return Array.from(stats.values()).sort((a, b) => b.hours - a.hours);
-};
+    return Array.from(allNames).map(name => {
+      const instructor = instructorStats.find(s => s.name === name);
+      const admin = adminStats.get(name);
+      
+      return {
+        name,
+        email: instructor?.email || admin?.email || "",
+        instructorHours: instructor?.hours || 0,
+        instructorReports: instructor?.reports || 0,
+        adminHours: admin?.hours || 0,
+        adminReports: admin?.reports || 0,
+        mismatch: (instructor?.hours || 0) !== (admin?.hours || 0)
+      };
+    }).sort((a, b) => b.instructorHours - a.instructorHours);
+  };
+
+  // מיזוג סטטיסטיקות בתי ספר
+  const getMergedSchoolStats = () => {
+    const schoolStats = getSchoolStats();
+    const adminStats = getAdminSchoolStats();
+    
+    const allSchools = new Set([
+      ...schoolStats.map(s => s.school),
+      ...Array.from(adminStats.values()).map(s => s.school)
+    ]);
+
+    return Array.from(allSchools).map(school => {
+      const fromInstructor = schoolStats.find(s => s.school === school);
+      const fromAdmin = adminStats.get(school);
+      
+      return {
+        school,
+        city: fromInstructor?.city || fromAdmin?.city || "-",
+        instructorHours: fromInstructor?.hours || 0,
+        instructorReports: fromInstructor?.reports || 0,
+        adminHours: fromAdmin?.hours || 0,
+        adminReports: fromAdmin?.reports || 0,
+        mismatch: (fromInstructor?.hours || 0) !== (fromAdmin?.hours || 0)
+      };
+    }).sort((a, b) => b.instructorHours - a.instructorHours);
+  };
+
 
   const months = getMonths();
   const filteredRecords = getFilteredRecords();
   const instructorStats = getInstructorStats();
   const schoolStats = getSchoolStats();
+  const mergedInstructorStats = getMergedInstructorStats();
+  const mergedSchoolStats = getMergedSchoolStats();
   const totalHours = filteredRecords.reduce((sum, r) => sum + Number(r.hours), 0);
-  const manualInstructorStats = getManualInstructorStats();
-  const manualSchoolStats = getManualSchoolStats();
+
   const exportAllStatsCsv = () => {
     const { downloadCsv } = require("@/lib/exportCsv");
     
     const monthName = selectedMonth ? formatMonthName(selectedMonth).replace(" ", "_") : "all";
     
-    // טבלה 1: דיווחי נוכחות
     let csv = "=== דיווחי נוכחות ===\n";
     csv += "שם,אימייל,תאריך,בית ספר,עיר,שעות\n";
     filteredRecords.forEach(record => {
       csv += `"${record.profiles?.full_name || "-"}","${record.profiles?.email || "-"}","${new Date(record.date).toLocaleDateString("he-IL")}","${record.school_name}","${record.city || "-"}","${record.hours}"\n`;
     });
     
-    // טבלה 2: שעות לפי מדריך
     csv += "\n=== שעות לפי מדריך ===\n";
     csv += "שם,אימייל,דיווחים,שעות\n";
     instructorStats.forEach(stat => {
       csv += `"${stat.name}","${stat.email}","${stat.reports}","${stat.hours}"\n`;
     });
     
-    // טבלה 3: שעות לפי בית ספר
     csv += "\n=== שעות לפי בית ספר ===\n";
     csv += "בית ספר,עיר,דיווחים,שעות\n";
     schoolStats.forEach(stat => {
@@ -581,7 +614,6 @@ const getManualSchoolStats = () => {
 
   return (
     <div className="space-y-6">
-      {/* בחירת חודש */}
       <div className="bg-white rounded-lg border p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -619,31 +651,32 @@ const getManualSchoolStats = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* טבלת מדריכים */}
         <div className="bg-white rounded-lg border overflow-hidden">
           <div className="p-4 bg-purple-50 border-b flex items-center justify-between">
             <h2 className="font-bold text-lg">👥 שעות לפי מדריך</h2>
-            <span className="text-sm text-gray-500">{instructorStats.length} מדריכים</span>
+            <span className="text-sm text-gray-500">{mergedInstructorStats.length} מדריכים</span>
           </div>
           <div className="max-h-80 overflow-y-auto">
             <table className="w-full">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   <th className="p-3 text-right">שם</th>
-                  <th className="p-3 text-right">דיווחים</th>
-                  <th className="p-3 text-right">שעות</th>
+                  <th className="p-3 text-right text-blue-600">דיווחי מדריך</th>
+                  <th className="p-3 text-right text-blue-600">שעות מדריך</th>
+                  <th className="p-3 text-right text-purple-600">דיווחי מנהל</th>
+                  <th className="p-3 text-right text-purple-600">שעות מנהל</th>
                 </tr>
               </thead>
               <tbody>
-                {instructorStats.length === 0 ? (
+                {mergedInstructorStats.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="p-4 text-center text-gray-400">
+                    <td colSpan={5} className="p-4 text-center text-gray-400">
                       אין נתונים בחודש זה
                     </td>
                   </tr>
                 ) : (
-                  instructorStats.map((stat, index) => (
-                    <tr key={stat.email} className="border-t hover:bg-gray-50">
+                  mergedInstructorStats.map((stat, index) => (
+                    <tr key={stat.email || stat.name} className={`border-t hover:bg-gray-50 ${stat.mismatch ? "bg-red-50" : ""}`}>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
@@ -657,8 +690,10 @@ const getManualSchoolStats = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-center">{stat.reports}</td>
-                      <td className="p-3 font-bold text-blue-600">{stat.hours}</td>
+                      <td className="p-3 text-center">{stat.instructorReports}</td>
+                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-blue-600"}`}>{stat.instructorHours}</td>
+                      <td className="p-3 text-center">{stat.adminReports}</td>
+                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-purple-600"}`}>{stat.adminHours}</td>
                     </tr>
                   ))
                 )}
@@ -667,11 +702,10 @@ const getManualSchoolStats = () => {
           </div>
         </div>
 
-        {/* טבלת בתי ספר */}
         <div className="bg-white rounded-lg border overflow-hidden">
           <div className="p-4 bg-orange-50 border-b flex items-center justify-between">
             <h2 className="font-bold text-lg">🏫 שעות לפי בית ספר</h2>
-            <span className="text-sm text-gray-500">{schoolStats.length} בתי ספר</span>
+            <span className="text-sm text-gray-500">{mergedSchoolStats.length} בתי ספר</span>
           </div>
           <div className="max-h-80 overflow-y-auto">
             <table className="w-full">
@@ -679,20 +713,22 @@ const getManualSchoolStats = () => {
                 <tr>
                   <th className="p-3 text-right">בית ספר</th>
                   <th className="p-3 text-right">עיר</th>
-                  <th className="p-3 text-right">דיווחים</th>
-                  <th className="p-3 text-right">שעות</th>
+                  <th className="p-3 text-right text-blue-600">דיווחי מדריך</th>
+                  <th className="p-3 text-right text-blue-600">שעות מדריך</th>
+                  <th className="p-3 text-right text-purple-600">דיווחי מנהל</th>
+                  <th className="p-3 text-right text-purple-600">שעות מנהל</th>
                 </tr>
               </thead>
               <tbody>
-                {schoolStats.length === 0 ? (
+                {mergedSchoolStats.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-4 text-center text-gray-400">
+                    <td colSpan={6} className="p-4 text-center text-gray-400">
                       אין נתונים בחודש זה
                     </td>
                   </tr>
                 ) : (
-                  schoolStats.map((stat, index) => (
-                    <tr key={stat.school} className="border-t hover:bg-gray-50">
+                  mergedSchoolStats.map((stat, index) => (
+                    <tr key={stat.school} className={`border-t hover:bg-gray-50 ${stat.mismatch ? "bg-red-50" : ""}`}>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
@@ -704,8 +740,10 @@ const getManualSchoolStats = () => {
                         </div>
                       </td>
                       <td className="p-3 text-sm text-gray-500">{stat.city}</td>
-                      <td className="p-3 text-center">{stat.reports}</td>
-                      <td className="p-3 font-bold text-orange-600">{stat.hours}</td>
+                      <td className="p-3 text-center">{stat.instructorReports}</td>
+                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-blue-600"}`}>{stat.instructorHours}</td>
+                      <td className="p-3 text-center">{stat.adminReports}</td>
+                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-orange-600"}`}>{stat.adminHours}</td>
                     </tr>
                   ))
                 )}
@@ -713,125 +751,504 @@ const getManualSchoolStats = () => {
             </table>
           </div>
         </div>
-      </div>
-{/* כותרת לטבלאות מנוכחות מדריכים */}
-      <div className="mt-6 mb-4">
-        <h2 className="font-bold text-lg text-gray-600">📝 מתוך נוכחות מדריכים (הזנה ידנית)</h2>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* טבלת מדריכים - מנוכחות מדריכים */}
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <div className="p-4 bg-indigo-50 border-b flex items-center justify-between">
-            <h2 className="font-bold text-lg">👥 שעות לפי מדריך (ידני)</h2>
-            <span className="text-sm text-gray-500">{manualInstructorStats.length} מדריכים</span>
+
+
+
+
+      </div>
+    </div>
+  );
+}
+
+
+// קומפוננטת טאב דיווח שעות מנהל
+function AdminAttendanceTab({ 
+  records, 
+  schedules, 
+  users,
+  loading, 
+  onRefresh 
+}: { 
+  records: AdminAttendanceRecord[]; 
+  schedules: Schedule[];
+  users: User[];
+  loading: boolean; 
+  onRefresh: () => void 
+}) {
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [newRows, setNewRows] = useState<{
+    instructor_name: string;
+    instructor_email: string;
+    school_name: string;
+    city: string;
+    date: string;
+    hours: number;
+  }[]>([]);
+
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+
+  const getDayOfWeek = (date: Date) => {
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    return days[date.getDay()];
+  };
+
+  const hebrewDays: { [key: string]: string } = {
+    sunday: "ראשון",
+    monday: "שני",
+    tuesday: "שלישי",
+    wednesday: "רביעי",
+    thursday: "חמישי",
+    friday: "שישי",
+  };
+
+  const currentDay = getDayOfWeek(today);
+
+  // טעינת מערכת השעות של היום
+  useEffect(() => {
+    const todaySchedules = schedules.filter(s => s.day_of_week === currentDay);
+    if (todaySchedules.length > 0 && newRows.length === 0) {
+      setNewRows(todaySchedules.map(s => ({
+        instructor_name: s.instructor_name || "",
+        instructor_email: s.instructor_email || "",
+        school_name: s.school_name,
+        city: s.city,
+        date: todayStr,
+        hours: s.hours_count,
+      })));
+    } else if (todaySchedules.length === 0 && newRows.length === 0) {
+      setNewRows([{
+        instructor_name: "",
+        instructor_email: "",
+        school_name: "",
+        city: "",
+        date: todayStr,
+        hours: 1,
+      }]);
+    }
+  }, [schedules, currentDay]);
+
+  // רשימת בתי ספר ייחודיים
+  const getUniqueSchools = () => {
+    const schools = new Map<string, string>();
+    schedules.forEach(s => {
+      if (s.school_name) {
+        schools.set(s.school_name, s.city);
+      }
+    });
+    return Array.from(schools.entries());
+  };
+
+  // עדכון עיר אוטומטי לפי בית ספר
+  const handleSchoolChange = (index: number, schoolName: string) => {
+    const updated = [...newRows];
+    updated[index].school_name = schoolName;
+    
+    const school = schedules.find(s => s.school_name === schoolName);
+    if (school) {
+      updated[index].city = school.city;
+    }
+    setNewRows(updated);
+  };
+
+  // עדכון מייל אוטומטי לפי שם מדריך
+  const handleInstructorChange = (index: number, instructorName: string) => {
+    const updated = [...newRows];
+    updated[index].instructor_name = instructorName;
+    
+    const user = users.find(u => u.full_name === instructorName);
+    if (user) {
+      updated[index].instructor_email = user.email;
+    }
+    setNewRows(updated);
+  };
+
+  const handleRowChange = (index: number, field: string, value: string | number) => {
+    const updated = [...newRows];
+    updated[index] = { ...updated[index], [field]: value };
+    setNewRows(updated);
+  };
+
+  const addRow = () => {
+    setNewRows([...newRows, {
+      instructor_name: "",
+      instructor_email: "",
+      school_name: "",
+      city: "",
+      date: todayStr,
+      hours: 1,
+    }]);
+  };
+
+  const removeRow = (index: number) => {
+    if (newRows.length > 1) {
+      setNewRows(newRows.filter((_, i) => i !== index));
+    }
+  };
+
+  const submitRow = async (index: number) => {
+    const row = newRows[index];
+    if (!row.instructor_name || !row.school_name || !row.date) {
+      alert("יש למלא שם מדריך, בית ספר ותאריך");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/admin-attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(row),
+      });
+      if (res.ok) {
+        const updated = [...newRows];
+        updated[index] = {
+          instructor_name: "",
+          instructor_email: "",
+          school_name: "",
+          city: "",
+          date: todayStr,
+          hours: 1,
+        };
+        setNewRows(updated);
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const submitAll = async () => {
+    const validRows = newRows.filter(r => r.instructor_name && r.school_name && r.date);
+    if (validRows.length === 0) {
+      alert("אין שורות תקינות לשמירה");
+      return;
+    }
+
+    try {
+      for (const row of validRows) {
+        await fetch("/api/admin/admin-attendance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(row),
+        });
+      }
+      // איפוס לשורה ריקה
+      setNewRows([{
+        instructor_name: "",
+        instructor_email: "",
+        school_name: "",
+        city: "",
+        date: todayStr,
+        hours: 1,
+      }]);
+      onRefresh();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const deleteRecord = async (id: string) => {
+    if (!confirm("האם למחוק רשומה זו?")) return;
+    try {
+      const res = await fetch(`/api/admin/admin-attendance?id=${id}`, { method: "DELETE" });
+      if (res.ok) onRefresh();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  // חודשים
+  const getMonths = () => {
+    const months = new Set<string>();
+    records.forEach((record) => {
+      const date = new Date(record.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      months.add(monthKey);
+    });
+    return Array.from(months).sort().reverse();
+  };
+
+  const getFilteredRecords = () => {
+    if (!selectedMonth) return records;
+    return records.filter((record) => {
+      const date = new Date(record.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      return monthKey === selectedMonth;
+    });
+  };
+
+  const formatMonthName = (monthKey: string) => {
+    const [year, month] = monthKey.split("-");
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString("he-IL", { month: "long", year: "numeric" });
+  };
+
+  const exportCsv = () => {
+    const headers = ["מדריך", "אימייל", "בית ספר", "עיר", "תאריך", "שעות"];
+    const rows = filteredRecords.map(r => [
+      r.instructor_name,
+      r.instructor_email || "-",
+      r.school_name,
+      r.city || "-",
+      new Date(r.date).toLocaleDateString("he-IL"),
+      String(r.hours)
+    ]);
+
+    let csv = "\uFEFF" + headers.join(",") + "\n";
+    rows.forEach(row => {
+      csv += row.map(cell => `"${cell}"`).join(",") + "\n";
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `דיווחי_מנהל_${selectedMonth || "all"}.csv`;
+    link.click();
+  };
+
+  const months = getMonths();
+  const filteredRecords = getFilteredRecords();
+  const totalHours = filteredRecords.reduce((sum, r) => sum + Number(r.hours), 0);
+
+  useEffect(() => {
+    if (months.length > 0 && !selectedMonth) {
+      setSelectedMonth(months[0]);
+    }
+  }, [records, months.length]);
+
+  return (
+    <div className="space-y-6">
+      {/* טופס הוספה */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="p-4 bg-green-50 border-b flex items-center justify-between">
+          <h2 className="font-bold text-lg">➕ דיווח שעות - יום {hebrewDays[currentDay]}</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={addRow}
+              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              + הוסף שורה
+            </button>
+            <button
+              onClick={submitAll}
+              className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              ✓ שמור הכל
+            </button>
           </div>
-          <div className="max-h-80 overflow-y-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 sticky top-0">
-                <tr>
-                  <th className="p-3 text-right">שם</th>
-                  <th className="p-3 text-right">דיווחים</th>
-                  <th className="p-3 text-right">שעות</th>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-2 text-right text-sm">מדריך</th>
+                <th className="p-2 text-right text-sm">בית ספר</th>
+                <th className="p-2 text-right text-sm">עיר</th>
+                <th className="p-2 text-right text-sm">תאריך</th>
+                <th className="p-2 text-right text-sm">שעות</th>
+                <th className="p-2 text-right text-sm">פעולות</th>
+              </tr>
+            </thead>
+            <tbody>
+              {newRows.map((row, index) => (
+                <tr key={index} className="border-t">
+                  <td className="p-2">
+                    <div className="flex flex-col">
+                      <input
+                        type="text"
+                        list="instructors-list"
+                        value={row.instructor_name}
+                        onChange={(e) => handleInstructorChange(index, e.target.value)}
+                        placeholder="שם מדריך..."
+                        className="p-1 border rounded text-sm w-28"
+                      />
+                      <span className="text-xs text-gray-400">{row.instructor_email || ""}</span>
+                    </div>
+                  </td>
+                  <td className="p-2">
+                    <input
+                      type="text"
+                      list="schools-list"
+                      value={row.school_name}
+                      onChange={(e) => handleSchoolChange(index, e.target.value)}
+                      placeholder="בית ספר..."
+                      className="p-1 border rounded text-sm w-28"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <input
+                      type="text"
+                      value={row.city}
+                      onChange={(e) => handleRowChange(index, "city", e.target.value)}
+                      placeholder="עיר..."
+                      className="p-1 border rounded text-sm w-20"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <input
+                      type="date"
+                      value={row.date}
+                      onChange={(e) => handleRowChange(index, "date", e.target.value)}
+                      className="p-1 border rounded text-sm"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={row.hours}
+                      onChange={(e) => handleRowChange(index, "hours", parseInt(e.target.value) || 1)}
+                      className="p-1 border rounded text-sm w-14"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => submitRow(index)}
+                        className="text-green-600 hover:text-green-800 text-sm"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => removeRow(index)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {manualInstructorStats.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="p-4 text-center text-gray-400">
-                      אין נתונים בחודש זה
-                    </td>
-                  </tr>
-                ) : (
-                  manualInstructorStats.map((stat, index) => (
-                    <tr key={stat.name} className="border-t hover:bg-gray-50">
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
-                            index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : index === 2 ? "bg-orange-400" : "bg-gray-300"
-                          }`}>
-                            {index + 1}
-                          </span>
-                          <span className="font-medium">{stat.name}</span>
-                        </div>
-                      </td>
-                      <td className="p-3 text-center">{stat.reports}</td>
-                      <td className="p-3 font-bold text-indigo-600">{stat.hours}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Datalists */}
+        <datalist id="instructors-list">
+          {users.map(u => (
+            <option key={u.id} value={u.full_name || u.email} />
+          ))}
+        </datalist>
+        <datalist id="schools-list">
+          {getUniqueSchools().map(([name]) => (
+            <option key={name} value={name} />
+          ))}
+        </datalist>
+      </div>
+
+      {/* טבלת היסטוריה */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="p-4 bg-purple-50 border-b flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h2 className="font-bold text-lg">📋 דיווחי מנהל</h2>
+            <button
+              onClick={exportCsv}
+              className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              📥 ייצוא
+            </button>
+          </div>
+          <div className="text-sm text-gray-500">
+            סה״כ: <span className="font-bold text-purple-600">{totalHours}</span> שעות | 
+            <span className="font-bold text-purple-600 mr-1">{filteredRecords.length}</span> רשומות
           </div>
         </div>
 
-        {/* טבלת בתי ספר - מנוכחות מדריכים */}
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <div className="p-4 bg-teal-50 border-b flex items-center justify-between">
-            <h2 className="font-bold text-lg">🏫 שעות לפי בית ספר (ידני)</h2>
-            <span className="text-sm text-gray-500">{manualSchoolStats.length} בתי ספר</span>
+        {/* בחירת חודש */}
+        {months.length > 0 && (
+          <div className="p-3 border-b overflow-x-auto whitespace-nowrap">
+            <div className="flex gap-2">
+              {months.map((month) => (
+                <button
+                  key={month}
+                  onClick={() => setSelectedMonth(month)}
+                  className={`px-4 py-2 rounded-full text-sm ${
+                    selectedMonth === month
+                      ? "bg-purple-500 text-white"
+                      : "bg-gray-100 hover:bg-gray-200"
+                  }`}
+                >
+                  {formatMonthName(month)}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="max-h-80 overflow-y-auto">
+        )}
+
+        <div className="max-h-96 overflow-y-auto">
+          {loading ? (
+            <p className="p-4 text-center text-gray-500">טוען...</p>
+          ) : (
             <table className="w-full">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
+                  <th className="p-3 text-right">מדריך</th>
                   <th className="p-3 text-right">בית ספר</th>
                   <th className="p-3 text-right">עיר</th>
-                  <th className="p-3 text-right">דיווחים</th>
+                  <th className="p-3 text-right">תאריך</th>
                   <th className="p-3 text-right">שעות</th>
+                  <th className="p-3 text-right">פעולות</th>
                 </tr>
               </thead>
               <tbody>
-                {manualSchoolStats.length === 0 ? (
+                {filteredRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-4 text-center text-gray-400">
-                      אין נתונים בחודש זה
+                    <td colSpan={6} className="p-4 text-center text-gray-400">
+                      אין דיווחים
                     </td>
                   </tr>
                 ) : (
-                  manualSchoolStats.map((stat, index) => (
-                    <tr key={stat.school} className="border-t hover:bg-gray-50">
+                  filteredRecords.map((record) => (
+                    <tr key={record.id} className="border-t hover:bg-gray-50">
                       <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
-                            index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : index === 2 ? "bg-orange-400" : "bg-gray-300"
-                          }`}>
-                            {index + 1}
-                          </span>
-                          <span className="font-medium">{stat.school}</span>
+                        <div>
+                          <div className="font-medium">{record.instructor_name}</div>
+                          <div className="text-xs text-gray-400">{record.instructor_email}</div>
                         </div>
                       </td>
-                      <td className="p-3 text-sm text-gray-500">{stat.city}</td>
-                      <td className="p-3 text-center">{stat.reports}</td>
-                      <td className="p-3 font-bold text-teal-600">{stat.hours}</td>
+                      <td className="p-3">{record.school_name}</td>
+                      <td className="p-3 text-sm text-gray-500">{record.city || "-"}</td>
+                      <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
+                      <td className="p-3 font-semibold">{record.hours}</td>
+                      <td className="p-3">
+                        <button
+                          onClick={() => deleteRecord(record.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          🗑️
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
-          </div>
+          )}
         </div>
       </div>
-
-
-
-
     </div>
   );
 }
 
 
 
+
+
+
+
 export default function AdminPage() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
-  const [manualRecords, setManualRecords] = useState<AttendanceRecord[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [settings, setSettings] = useState<Setting[]>([]);
-  const [loading, setLoading] = useState(true); 
-  const [activeTab, setActiveTab] = useState<"attendance" | "manual" | "stats" | "users" | "schedules" | "settings">("attendance");
-  // טפסים
-
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"attendance" | "admin-attendance" | "stats" | "users" | "schedules" | "settings">("attendance");
+  const [selectedDay, setSelectedDay] = useState<string>("sunday");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [adminRecords, setAdminRecords] = useState<AdminAttendanceRecord[]>([]);
   const [newSchedule, setNewSchedule] = useState({
     school_name: "",
     city: "",
@@ -843,7 +1260,15 @@ export default function AdminPage() {
     instructor_email: "",
     day_of_week: "sunday",
   });
-  const [aiPrompt, setAiPrompt] = useState("");
+
+  const daysOfWeek = [
+    { key: "sunday", label: "ראשון" },
+    { key: "monday", label: "שני" },
+    { key: "tuesday", label: "שלישי" },
+    { key: "wednesday", label: "רביעי" },
+    { key: "thursday", label: "חמישי" },
+    { key: "friday", label: "שישי" },
+  ];
 
   useEffect(() => {
     fetchAllData();
@@ -852,7 +1277,7 @@ export default function AdminPage() {
   const fetchAllData = async () => {
     await Promise.all([
       fetchRecords(),
-      fetchManualRecords(),
+      fetchAdminRecords(),
       fetchUsers(),
       fetchSchedules(),
       fetchSettings(),
@@ -870,16 +1295,15 @@ export default function AdminPage() {
     }
   };
 
-  const fetchManualRecords = async () => {
+  const fetchAdminRecords = async () => {
     try {
-      const res = await fetch("/api/admin/manual-attendance");
+      const res = await fetch("/api/admin/admin-attendance");
       const data = await res.json();
-      if (Array.isArray(data)) setManualRecords(data);
+      if (Array.isArray(data)) setAdminRecords(data);
     } catch (error) {
       console.error("Error:", error);
     }
   };
-
 
   const fetchUsers = async () => {
     try {
@@ -890,8 +1314,6 @@ export default function AdminPage() {
       console.error("Error:", error);
     }
   };
-
-
 
   const fetchSchedules = async () => {
     try {
@@ -953,8 +1375,6 @@ export default function AdminPage() {
     }
   };
 
-
-
   const addSchedule = async () => {
     if (!newSchedule.school_name.trim() || !newSchedule.city.trim() || !newSchedule.class_name.trim()) {
       alert("יש למלא שם בית ספר, עיר וכיתה");
@@ -967,7 +1387,7 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...newSchedule,
-          day_of_week: selectedDay,  // שולח את היום הנבחר
+          day_of_week: selectedDay,
         }),
       });
       if (res.ok) {
@@ -993,7 +1413,6 @@ export default function AdminPage() {
     return schedules.filter(s => s.day_of_week === selectedDay);
   };
 
-
   const deleteSchedule = async (id: string) => {
     if (!confirm("האם למחוק שורה זו?")) return;
     try {
@@ -1003,7 +1422,6 @@ export default function AdminPage() {
       console.error("Error:", error);
     }
   };
-
 
   const handleInstructorSelect = (instructorId: string) => {
     const instructor = users.find(u => u.id === instructorId);
@@ -1037,25 +1455,10 @@ export default function AdminPage() {
     }
   };
 
-  const [selectedDay, setSelectedDay] = useState<string>("sunday");
-
-  const daysOfWeek = [
-    { key: "sunday", label: "ראשון" },
-    { key: "monday", label: "שני" },
-    { key: "tuesday", label: "שלישי" },
-    { key: "wednesday", label: "רביעי" },
-    { key: "thursday", label: "חמישי" },
-    { key: "friday", label: "שישי" },
-  ];
-
-
-
-
   return (
     <div className="min-h-screen bg-gray-100 p-6" dir="rtl">
       <Header userName="מנהל" isAdmin={true} />
 
-      {/* טאבים */}
       <div className="flex flex-wrap gap-2 mb-6">
         <button
           onClick={() => setActiveTab("attendance")}
@@ -1065,11 +1468,13 @@ export default function AdminPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab("manual")}
-          className={`px-4 py-2 rounded-lg ${activeTab === "manual" ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"}`}
+          onClick={() => setActiveTab("admin-attendance")}
+          className={`px-4 py-2 rounded-lg ${activeTab === "admin-attendance" ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"}`}
         >
           📝 דיווח שעות
         </button>
+
+
 
         <button
           onClick={() => setActiveTab("stats")}
@@ -1078,8 +1483,6 @@ export default function AdminPage() {
           📈 סטטיסטיקות
         </button>
 
-
-
         <button
           onClick={() => setActiveTab("users")}
           className={`px-4 py-2 rounded-lg ${activeTab === "users" ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"}`}
@@ -1087,19 +1490,12 @@ export default function AdminPage() {
           👥 משתמשים
         </button>
 
-
-
         <button
           onClick={() => setActiveTab("schedules")}
           className={`px-4 py-2 rounded-lg ${activeTab === "schedules" ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"}`}
         >
           📅 מערכת שעות
         </button>
-
-
-
-
-
 
         <button
           onClick={() => setActiveTab("settings")}
@@ -1109,67 +1505,25 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* דיווחי נוכחות */}
-
       {activeTab === "attendance" && (
         <AttendanceTab records={records} loading={loading} onRefresh={fetchAllData} />
       )}
 
-      {activeTab === "manual" && (
-        <div className="space-y-6">
-          <AdminAttendanceForm onRecordAdded={fetchAllData} />
-          
-          {/* טבלת ההזנות הידניות */}
-          <div className="bg-white rounded-lg border overflow-hidden">
-            <div className="p-4 bg-purple-50 border-b flex items-center justify-between">
-              <h2 className="font-bold text-lg">📋 הזנות ידניות</h2>
-              <span className="text-sm text-gray-500">
-                סה״כ: <span className="font-bold text-purple-600">{manualRecords.length}</span> רשומות
-              </span>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 sticky top-0">
-                  <tr>
-                    <th className="p-3 text-right">מדריך</th>
-                    <th className="p-3 text-right">תאריך</th>
-                    <th className="p-3 text-right">בית ספר</th>
-                    <th className="p-3 text-right">עיר</th>
-                    <th className="p-3 text-right">שעות</th>
-                    <th className="p-3 text-right">הערות</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {manualRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-4 text-center text-gray-400">
-                        אין הזנות ידניות
-                      </td>
-                    </tr>
-                  ) : (
-                    manualRecords.map((record) => (
-                      <tr key={record.id} className="border-t hover:bg-gray-50">
-                        <td className="p-3 font-medium">{record.instructor_name || "-"}</td>
-                        <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
-                        <td className="p-3">{record.school_name}</td>
-                        <td className="p-3 text-sm text-gray-500">{record.city || "-"}</td>
-                        <td className="p-3 font-semibold">{record.hours}</td>
-                        <td className="p-3 text-sm">{record.notes || "-"}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      {activeTab === "admin-attendance" && (
+        <AdminAttendanceTab 
+          records={adminRecords} 
+          schedules={schedules}
+          users={users}
+          loading={loading} 
+          onRefresh={fetchAllData} 
+        />
       )}
+
 
       {activeTab === "stats" && (
-        <StatsTab records={records} manualRecords={manualRecords} />
+        <StatsTab records={records} adminRecords={adminRecords} />
       )}
 
-      {/* משתמשים */}
       {activeTab === "users" && (
         <div className="bg-white rounded-lg border overflow-hidden">
           <div className="p-4 bg-gray-50 border-b">
@@ -1195,9 +1549,6 @@ export default function AdminPage() {
                         {user.role === "admin" ? "מנהל" : "מדריך"}
                       </span>
                     </td>
-
-
-
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button
@@ -1214,8 +1565,6 @@ export default function AdminPage() {
                         </button>
                       </div>
                     </td>
-
-
                   </tr>
                 ))}
               </tbody>
@@ -1224,9 +1573,6 @@ export default function AdminPage() {
         </div>
       )}
 
-
-
-      {/* מערכת שעות */}
       {activeTab === "schedules" && (
         <div className="bg-white rounded-lg border overflow-hidden">
           <div className="p-4 bg-gray-50 border-b flex items-center justify-between gap-4">
@@ -1253,12 +1599,6 @@ export default function AdminPage() {
             </div>
           </div>
 
-
-
-
-
-
-          {/* טופס הוספה */}
           <div className="p-4 border-b bg-gray-50">
             <div className="flex flex-wrap gap-3 items-end">
               <div className="flex flex-col gap-1">
@@ -1335,7 +1675,6 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* טבלה */}
           <div className="max-h-96 overflow-y-auto">
             <table className="w-full">
               <thead className="bg-gray-50 sticky top-0">
@@ -1352,7 +1691,7 @@ export default function AdminPage() {
               <tbody>
                 {getFilteredSchedules().length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-400">
+                    <td colSpan={7} className="p-4 text-center text-gray-400">
                       אין שיעורים ביום {daysOfWeek.find(d => d.key === selectedDay)?.label}
                     </td>
                   </tr>
@@ -1391,7 +1730,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* הגדרות AI */}
       {activeTab === "settings" && (
         <div className="bg-white rounded-lg border overflow-hidden">
           <div className="p-4 bg-gray-50 border-b">
