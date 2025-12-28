@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import AdminAttendanceForm from "@/components/AdminAttendanceForm";
 
 type AttendanceRecord = {
   id: string;
   school_name: string;
   city: string;
   date: string;
-  start_time: string;
-  end_time: string;
   hours: number;
+  user_id: string;
   instructor_name?: string;
-  profiles: {
+  notes?: string;
+  admin_notes?: string;
+  profiles?: {
     full_name: string;
     email: string;
   };
@@ -52,12 +54,14 @@ type Schedule = {
 
 // קומפוננטת טאב דיווחי נוכחות
 // קומפוננטת טאב דיווחי נוכחות
-function AttendanceTab({ records, loading }: { records: AttendanceRecord[]; loading: boolean }) {
+function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRecord[]; loading: boolean; onRefresh: () => void }) {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [filterUser, setFilterUser] = useState<string>("");
   const [filterCity, setFilterCity] = useState<string>("");
   const [filterSchool, setFilterSchool] = useState<string>("");
   const [filterDate, setFilterDate] = useState<string>("");
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteValue, setEditingNoteValue] = useState<string>("");
 
   const getMonths = () => {
     const months = new Set<string>();
@@ -144,6 +148,30 @@ function AttendanceTab({ records, loading }: { records: AttendanceRecord[]; load
     return date.toLocaleDateString("he-IL", { month: "long", year: "numeric" });
   };
 
+  const saveAdminNote = async (recordId: string) => {
+    console.log("Saving note:", recordId, editingNoteValue);
+    try {
+      const res = await fetch("/api/admin/attendance/notes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recordId, admin_notes: editingNoteValue }),
+      });
+      console.log("Response:", res.status);
+      if (res.ok) {
+        onRefresh();
+        setEditingNoteId(null);
+        setEditingNoteValue("");
+      } else {
+        const data = await res.json();
+        console.log("Error:", data);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+
+
   const clearFilters = () => {
     setFilterUser("");
     setFilterCity("");
@@ -155,16 +183,16 @@ function AttendanceTab({ records, loading }: { records: AttendanceRecord[]; load
   const exportAttendanceCsv = () => {
     const { downloadCsv, arrayToCsv } = require("@/lib/exportCsv");
     
-    const headers = ["שם", "אימייל", "תאריך", "בית ספר", "עיר", "שעת התחלה", "שעת סיום", "סה״כ שעות"];
+    const headers = ["שם", "אימייל", "תאריך", "בית ספר", "עיר", "שעות", "הערות", "הערות מנהל"];
     const rows = filteredRecords.map(record => [
       record.profiles?.full_name || "-",
       record.profiles?.email || "-",
       new Date(record.date).toLocaleDateString("he-IL"),
       record.school_name,
       record.city || "-",
-      record.start_time?.slice(0, 5) || "-",
-      record.end_time?.slice(0, 5) || "-",
-      String(record.hours)
+      String(record.hours),
+      record.notes || "-",
+      record.admin_notes || "-"
     ]);
 
     const csv = arrayToCsv(headers, rows);
@@ -318,12 +346,14 @@ function AttendanceTab({ records, loading }: { records: AttendanceRecord[]; load
                 <th className="p-3 text-right">בית ספר</th>
                 <th className="p-3 text-right">עיר</th>
                 <th className="p-3 text-right">שעות</th>
+                <th className="p-3 text-right">הערות</th>
+                <th className="p-3 text-right">הערות מנהל</th>
               </tr>
             </thead>
             <tbody>
               {filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-4 text-center text-gray-400">
+                  <td colSpan={8} className="p-4 text-center text-gray-400">
                     אין דיווחים בחודש זה
                   </td>
                 </tr>
@@ -336,6 +366,43 @@ function AttendanceTab({ records, loading }: { records: AttendanceRecord[]; load
                     <td className="p-3">{record.school_name}</td>
                     <td className="p-3">{record.city || "-"}</td>
                     <td className="p-3 font-semibold">{record.hours}</td>
+                    <td className="p-3 text-sm">{record.notes || "-"}</td>
+                    <td className="p-3 text-sm">
+                      {editingNoteId === record.id ? (
+                        <div className="flex gap-1">
+                          <input
+                            type="text"
+                            value={editingNoteValue}
+                            onChange={(e) => setEditingNoteValue(e.target.value)}
+                            className="p-1 border rounded text-sm w-24"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => saveAdminNote(record.id)}
+                            className="text-green-600 hover:text-green-800"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={() => setEditingNoteId(null)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <span
+                          onClick={() => {
+                            setEditingNoteId(record.id);
+                            setEditingNoteValue(record.admin_notes || "");
+                          }}
+                          className="cursor-pointer hover:bg-purple-50 px-2 py-1 rounded text-purple-600"
+                        >
+                          {record.admin_notes || "➕ הוסף"}
+                        </span>
+                      )}
+                    </td>
+
                   </tr>
                 ))
               )}
@@ -762,7 +829,7 @@ export default function AdminPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [settings, setSettings] = useState<Setting[]>([]);
   const [loading, setLoading] = useState(true); 
-  const [activeTab, setActiveTab] = useState<"attendance" | "stats" | "users" | "schedules" | "settings">("attendance");
+  const [activeTab, setActiveTab] = useState<"attendance" | "manual" | "stats" | "users" | "schedules" | "settings">("attendance");
   // טפסים
 
   const [newSchedule, setNewSchedule] = useState({
@@ -998,6 +1065,13 @@ export default function AdminPage() {
         </button>
 
         <button
+          onClick={() => setActiveTab("manual")}
+          className={`px-4 py-2 rounded-lg ${activeTab === "manual" ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"}`}
+        >
+          📝 דיווח שעות
+        </button>
+
+        <button
           onClick={() => setActiveTab("stats")}
           className={`px-4 py-2 rounded-lg ${activeTab === "stats" ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"}`}
         >
@@ -1036,8 +1110,59 @@ export default function AdminPage() {
       </div>
 
       {/* דיווחי נוכחות */}
+
       {activeTab === "attendance" && (
-        <AttendanceTab records={records} loading={loading} />
+        <AttendanceTab records={records} loading={loading} onRefresh={fetchAllData} />
+      )}
+
+      {activeTab === "manual" && (
+        <div className="space-y-6">
+          <AdminAttendanceForm onRecordAdded={fetchAllData} />
+          
+          {/* טבלת ההזנות הידניות */}
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <div className="p-4 bg-purple-50 border-b flex items-center justify-between">
+              <h2 className="font-bold text-lg">📋 הזנות ידניות</h2>
+              <span className="text-sm text-gray-500">
+                סה״כ: <span className="font-bold text-purple-600">{manualRecords.length}</span> רשומות
+              </span>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="p-3 text-right">מדריך</th>
+                    <th className="p-3 text-right">תאריך</th>
+                    <th className="p-3 text-right">בית ספר</th>
+                    <th className="p-3 text-right">עיר</th>
+                    <th className="p-3 text-right">שעות</th>
+                    <th className="p-3 text-right">הערות</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {manualRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-4 text-center text-gray-400">
+                        אין הזנות ידניות
+                      </td>
+                    </tr>
+                  ) : (
+                    manualRecords.map((record) => (
+                      <tr key={record.id} className="border-t hover:bg-gray-50">
+                        <td className="p-3 font-medium">{record.instructor_name || "-"}</td>
+                        <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
+                        <td className="p-3">{record.school_name}</td>
+                        <td className="p-3 text-sm text-gray-500">{record.city || "-"}</td>
+                        <td className="p-3 font-semibold">{record.hours}</td>
+                        <td className="p-3 text-sm">{record.notes || "-"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       )}
 
       {activeTab === "stats" && (

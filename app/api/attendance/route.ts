@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { school_name, city, date, start_time, end_time, hours, instructor_name } = body;
+  const { school_name, city, date, hours, notes, instructor_name } = body;
 
   const { data, error } = await supabase
     .from("attendance_records")
@@ -42,15 +42,15 @@ export async function POST(request: NextRequest) {
       school_name,
       city: city || null,
       date,
-      start_time,
-      end_time,
       hours,
+      notes: notes || null,
       instructor_name: instructor_name || null,
     })
     .select()
     .single();
 
   if (error) {
+    console.log("Attendance POST error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

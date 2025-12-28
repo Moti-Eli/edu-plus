@@ -1,53 +1,43 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import Chat from "@/components/Chat";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import Header from "@/components/Header";
-import { createClient } from "@/lib/supabase/client";
+import AttendanceForm from "@/components/AttendanceForm";
+import { Suspense } from "react";
 
-export default function InstructorPage() {
-  const [profile, setProfile] = useState<{ full_name: string; role: string } | null>(null);
-  const [loading, setLoading] = useState(true);
+async function InstructorContent() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("full_name, role")
-          .eq("id", user.id)
-          .single();
-        
-        if (data) {
-          setProfile(data);
-        }
-      }
-      setLoading(false);
-    };
-
-    fetchProfile();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center" dir="rtl">
-        <p>טוען...</p>
-      </div>
-    );
+  if (!user) {
+    redirect("/auth/login");
   }
 
-  const isAdmin = profile?.role === "admin";
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role === "admin") {
+    redirect("/admin");
+  }
+
+  const userName = profile?.full_name || user.email || "מדריך";
 
   return (
+    <>
+      <Header userName={userName} isAdmin={false} />
+      <AttendanceForm />
+    </>
+  );
+}
+
+export default function InstructorPage() {
+  return (
     <div className="min-h-screen bg-gray-100 p-6" dir="rtl">
-      <Header 
-        userName={profile?.full_name || "מדריך"} 
-        isAdmin={isAdmin} 
-      />
-      <Chat userName={isAdmin ? profile?.full_name : undefined} isAdmin={isAdmin} />
+      <Suspense fallback={<div className="text-center p-8">טוען...</div>}>
+        <InstructorContent />
+      </Suspense>
     </div>
   );
 }
