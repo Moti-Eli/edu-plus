@@ -1590,6 +1590,44 @@ export default function AdminPage() {
     }
   };
 
+
+  const exportSchedulesCsv = () => {
+    const headers = ["יום", "בית ספר", "עיר", "כיתה", "שעות פעילות", "מס׳ שעות", "מדריך", "אימייל מדריך"];
+    
+    const dayLabels: { [key: string]: string } = {
+      sunday: "ראשון",
+      monday: "שני",
+      tuesday: "שלישי",
+      wednesday: "רביעי",
+      thursday: "חמישי",
+      friday: "שישי",
+    };
+
+    const rows = schedules.map(s => [
+      dayLabels[s.day_of_week] || s.day_of_week,
+      s.school_name,
+      s.city,
+      s.class_name || "-",
+      s.activity_hours || "-",
+      String(s.hours_count),
+      s.instructor_name || "-",
+      s.instructor_email || "-"
+    ]);
+
+    let csv = "\uFEFF" + headers.join(",") + "\n";
+    rows.forEach(row => {
+      csv += row.map(cell => `"${cell}"`).join(",") + "\n";
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "מערכת_שעות.csv";
+    link.click();
+  };
+
+
   const sendChatMessage = async () => {
     if (!chatInput.trim() || !apiKey) {
       if (!apiKey) alert("יש להזין מפתח API קודם");
@@ -1748,7 +1786,15 @@ export default function AdminPage() {
       {activeTab === "schedules" && (
         <div className="bg-white rounded-lg border overflow-hidden">
           <div className="p-4 bg-gray-50 border-b flex items-center justify-between gap-4">
-            <h2 className="font-bold text-lg whitespace-nowrap">📅 מערכת שעות</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="font-bold text-lg whitespace-nowrap">📅 מערכת שעות</h2>
+              <button
+                onClick={exportSchedulesCsv}
+                className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                📥 ייצוא
+              </button>
+            </div>
             
             <div className="flex gap-1">
               {daysOfWeek.map((day) => (
