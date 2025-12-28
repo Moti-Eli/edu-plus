@@ -781,9 +781,9 @@ function StatsTab({ records, adminRecords, users, schedules }: {
                         </div>
                       </td>
                       <td className="p-3 text-center">{stat.instructorReports}</td>
-                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-blue-600"}`}>{stat.instructorHours}</td>
+                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-green-600"}`}>{stat.instructorHours}</td>
                       <td className="p-3 text-center">{stat.adminReports}</td>
-                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-purple-600"}`}>{stat.adminHours}</td>
+                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-green-600"}`}>{stat.adminHours}</td>
                     </tr>
                   ))
                 )}
@@ -831,9 +831,9 @@ function StatsTab({ records, adminRecords, users, schedules }: {
                       </td>
                       <td className="p-3 text-sm text-gray-500">{stat.city}</td>
                       <td className="p-3 text-center">{stat.instructorReports}</td>
-                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-blue-600"}`}>{stat.instructorHours}</td>
+                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-green-600"}`}>{stat.instructorHours}</td>
                       <td className="p-3 text-center">{stat.adminReports}</td>
-                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-orange-600"}`}>{stat.adminHours}</td>
+                      <td className={`p-3 font-bold ${stat.mismatch ? "text-red-600" : "text-green-600"}`}>{stat.adminHours}</td>
                     </tr>
                   ))
                 )}
