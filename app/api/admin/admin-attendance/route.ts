@@ -50,17 +50,18 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { instructor_name, instructor_email, school_name, city, date, hours } = body;
+  const { instructor_name, instructor_email, school_name, city, date, hours, notes } = body;
 
   const { data, error } = await supabase
     .from("admin_attendance_records")
     .insert({
-      instructor_name,
-      instructor_email: instructor_email || null,
-      school_name,
-      city: city || null,
-      date,
-      hours,
+    instructor_name,
+    instructor_email: instructor_email || null,
+    school_name,
+    city: city || null,
+    date,
+    hours,
+    notes: notes || null,
     })
     .select()
     .single();

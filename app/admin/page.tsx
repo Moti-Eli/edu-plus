@@ -28,6 +28,7 @@ type AdminAttendanceRecord = {
   city: string;
   date: string;
   hours: number;
+  notes: string;
 };
 
 
@@ -67,6 +68,7 @@ function AttendanceTab({ records, loading, onRefresh }: { records: AttendanceRec
   const [filterDate, setFilterDate] = useState<string>("");
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteValue, setEditingNoteValue] = useState<string>("");
+  
 
   const getMonths = () => {
     const months = new Set<string>();
@@ -872,6 +874,7 @@ function AdminAttendanceTab({
     city: string;
     date: string;
     hours: number;
+    notes: string;
   }[]>([]);
 
   const today = new Date();
@@ -904,6 +907,7 @@ function AdminAttendanceTab({
         city: s.city,
         date: todayStr,
         hours: s.hours_count,
+        notes: "",
       })));
     } else if (todaySchedules.length === 0 && newRows.length === 0) {
       setNewRows([{
@@ -913,6 +917,7 @@ function AdminAttendanceTab({
         city: "",
         date: todayStr,
         hours: 1,
+        notes: "",
       }]);
     }
   }, [schedules, currentDay]);
@@ -966,6 +971,7 @@ function AdminAttendanceTab({
       city: "",
       date: todayStr,
       hours: 1,
+      notes: "",
     }]);
   };
 
@@ -997,6 +1003,7 @@ function AdminAttendanceTab({
           city: "",
           date: todayStr,
           hours: 1,
+          notes: "",
         };
         setNewRows(updated);
         onRefresh();
@@ -1029,6 +1036,7 @@ function AdminAttendanceTab({
         city: "",
         date: todayStr,
         hours: 1,
+        notes: "",
       }]);
       onRefresh();
     } catch (error) {
@@ -1137,6 +1145,7 @@ function AdminAttendanceTab({
                 <th className="p-2 text-right text-sm">עיר</th>
                 <th className="p-2 text-right text-sm">תאריך</th>
                 <th className="p-2 text-right text-sm">שעות</th>
+                <th className="p-2 text-right text-sm">הערות</th>
                 <th className="p-2 text-right text-sm">פעולות</th>
               </tr>
             </thead>
@@ -1183,6 +1192,8 @@ function AdminAttendanceTab({
                       className="p-1 border rounded text-sm"
                     />
                   </td>
+
+
                   <td className="p-2">
                     <input
                       type="number"
@@ -1193,7 +1204,21 @@ function AdminAttendanceTab({
                     />
                   </td>
                   <td className="p-2">
+                    <input
+                      type="text"
+                      value={row.notes || ""}
+                      onChange={(e) => handleRowChange(index, "notes", e.target.value)}
+                      placeholder="הערות..."
+                      className="p-1 border rounded text-sm w-24"
+                    />
+                  </td>
+                  <td className="p-2">
                     <div className="flex gap-1">
+
+
+
+
+
                       <button
                         onClick={() => submitRow(index)}
                         className="text-green-600 hover:text-green-800 text-sm"
@@ -1278,13 +1303,14 @@ function AdminAttendanceTab({
                   <th className="p-3 text-right">עיר</th>
                   <th className="p-3 text-right">תאריך</th>
                   <th className="p-3 text-right">שעות</th>
+                  <th className="p-3 text-right">הערות</th>
                   <th className="p-3 text-right">פעולות</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-400">
+                    <td colSpan={7} className="p-4 text-center text-gray-400">
                       אין דיווחים
                     </td>
                   </tr>
@@ -1301,6 +1327,7 @@ function AdminAttendanceTab({
                       <td className="p-3 text-sm text-gray-500">{record.city || "-"}</td>
                       <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
                       <td className="p-3 font-semibold">{record.hours}</td>
+                      <td className="p-3 text-sm">{record.notes || "-"}</td>
                       <td className="p-3">
                         <button
                           onClick={() => deleteRecord(record.id)}
@@ -1335,8 +1362,13 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"attendance" | "admin-attendance" | "stats" | "users" | "schedules" | "settings">("attendance");
   const [selectedDay, setSelectedDay] = useState<string>("sunday");
-  const [aiPrompt, setAiPrompt] = useState("");
   const [adminRecords, setAdminRecords] = useState<AdminAttendanceRecord[]>([]);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [chatMessages, setChatMessages] = useState<{role: string; content: string}[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [showAiSettings, setShowAiSettings] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
     school_name: "",
     city: "",
@@ -1421,6 +1453,8 @@ export default function AdminPage() {
         setSettings(data);
         const prompt = data.find((s: Setting) => s.key === "ai_prompt");
         if (prompt) setAiPrompt(prompt.value);
+        const key = data.find((s: Setting) => s.key === "openai_api_key");
+        if (key) setApiKey(key.value);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -1543,6 +1577,56 @@ export default function AdminPage() {
     }
   };
 
+  const saveApiKey = async () => {
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "openai_api_key", value: apiKey }),
+      });
+      if (res.ok) alert("מפתח API נשמר בהצלחה!");
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim() || !apiKey) {
+      if (!apiKey) alert("יש להזין מפתח API קודם");
+      return;
+    }
+
+    const userMessage = { role: "user", content: chatInput };
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/ai-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: chatInput,
+          apiKey,
+          systemPrompt: aiPrompt,
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        setChatMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      } else {
+        setChatMessages(prev => [...prev, { role: "assistant", content: "שגיאה: " + data.error }]);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setChatMessages(prev => [...prev, { role: "assistant", content: "שגיאה בתקשורת עם ה-AI" }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6" dir="rtl">
       <Header userName="מנהל" isAdmin={true} />
@@ -1589,7 +1673,7 @@ export default function AdminPage() {
           onClick={() => setActiveTab("settings")}
           className={`px-4 py-2 rounded-lg ${activeTab === "settings" ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"}`}
         >
-          ⚙️ הגדרות AI
+          🤖 AI
         </button>
       </div>
 
@@ -1819,27 +1903,114 @@ export default function AdminPage() {
       )}
 
       {activeTab === "settings" && (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b">
-            <h2 className="font-bold text-lg">⚙️ הגדרות AI</h2>
-          </div>
-          <div className="p-4">
-            <label className="block mb-2 font-semibold">פרומפט למערכת AI:</label>
-            <textarea
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              className="w-full h-48 p-3 border rounded"
-              placeholder="כתוב כאן את ההוראות ל-AI..."
-            />
-            <p className="text-sm text-gray-500 mt-2 mb-4">
-              הפרומפט הזה יישלח ל-AI בכל שאילתה. הוא יכלול גם את רשימת המדריכים, הערים ובתי הספר.
-            </p>
-            <button
-              onClick={saveAiPrompt}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        <div className="space-y-6">
+          {/* הגדרות */}
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <div 
+              className="p-4 bg-purple-50 border-b flex items-center justify-between cursor-pointer hover:bg-purple-100"
+              onClick={() => setShowAiSettings(!showAiSettings)}
             >
-              💾 שמור פרומפט
-            </button>
+              <h2 className="font-bold text-lg">🤖 הגדרות AI</h2>
+              <span className="text-xl">{showAiSettings ? "▲" : "▼"}</span>
+            </div>
+            {showAiSettings && (
+              <div className="p-4 space-y-4">
+                {/* API Key */}
+                <div>
+                  <label className="block mb-2 font-semibold">מפתח OpenAI API:</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="flex-1 p-2 border rounded"
+                    />
+                    <button
+                      onClick={saveApiKey}
+                      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      💾 שמור
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    ניתן להשיג מפתח מ-<a href="https://platform.openai.com/api-keys" target="_blank" className="text-blue-500 underline">OpenAI Platform</a>
+                  </p>
+                </div>
+
+                {/* System Prompt */}
+                <div>
+                  <label className="block mb-2 font-semibold">פרומפט מערכת:</label>
+                  <textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    className="w-full h-32 p-3 border rounded"
+                    placeholder="הוראות ל-AI... לדוגמה: אתה עוזר למנהל מערכת נוכחות. ענה בעברית."
+                  />
+                  <button
+                    onClick={saveAiPrompt}
+                    className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    💾 שמור פרומפט
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* צ'אט */}
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <div className="p-4 bg-blue-50 border-b">
+              <h2 className="font-bold text-lg">💬 שאל את ה-AI על המערכת</h2>
+            </div>
+            
+            {/* הודעות */}
+            <div className="h-80 overflow-y-auto p-4 space-y-3 bg-gray-50">
+              {chatMessages.length === 0 ? (
+                <p className="text-center text-gray-400">
+                  שאל כל שאלה על הנתונים במערכת...<br />
+                  לדוגמה: "כמה שעות עבד יוסי בדצמבר?" או "מצא חריגות בדיווחים"
+                </p>
+              ) : (
+                chatMessages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 rounded-lg max-w-[80%] ${
+                      msg.role === "user"
+                        ? "bg-blue-500 text-white mr-auto"
+                        : "bg-white border mr-auto"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                ))
+              )}
+              {chatLoading && (
+                <div className="bg-white border p-3 rounded-lg max-w-[80%]">
+                  <p className="text-gray-500">⏳ חושב...</p>
+                </div>
+              )}
+            </div>
+
+            {/* שדה קלט */}
+            <div className="p-4 border-t flex gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendChatMessage()}
+                placeholder="הקלד שאלה..."
+                className="flex-1 p-2 border rounded"
+                disabled={chatLoading}
+              />
+              <button
+                onClick={sendChatMessage}
+                disabled={chatLoading || !apiKey}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+              >
+                שלח
+              </button>
+            </div>
           </div>
         </div>
       )}

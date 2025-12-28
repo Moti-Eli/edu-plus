@@ -24,7 +24,14 @@ export async function GET() {
   const { data, error } = await supabase
     .from("attendance_records")
     .select(`
-      *,
+      id,
+      user_id,
+      school_name,
+      city,
+      date,
+      hours,
+      notes,
+      admin_notes,
       profiles!inner (
         full_name,
         email,
