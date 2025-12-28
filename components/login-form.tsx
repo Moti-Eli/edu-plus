@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
 
 export function LoginForm({
   className,
@@ -50,7 +51,15 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props} dir="rtl">
       {/* לוגו וכותרת */}
       <div className="text-center mb-4">
-        <div className="text-5xl mb-2">📋</div>
+        <div className="flex justify-center mb-4">
+          <Image 
+            src="/logo.png" 
+            alt="חינוך פלוס" 
+            width={180} 
+            height={70}
+            className="object-contain"
+          />
+        </div>
         <h1 className="text-2xl font-bold text-gray-800">מערכת נוכחות</h1>
         <p className="text-gray-500 text-sm">ניהול שעות עבודה למדריכים</p>
       </div>
