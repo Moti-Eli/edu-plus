@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
 
-export const dynamic = 'force-dynamic';
+
 
 export default async function PortalPage() {
   const supabase = await createClient();
