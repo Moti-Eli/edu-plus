@@ -1,11 +1,11 @@
 import { ComingSoon } from "@/components/coming-soon";
 
-export default function TermsPage() {
+export default function PhysicsProgramPage() {
   return (
     <ComingSoon 
-      title="תנאי שימוש"
-      description="תנאי השימוש באתר יפורסמו כאן בקרוב"
-      icon="📜"
+      title="תוכנית פיזיקה"
+      description="תוכנית הפיזיקה שלנו בפיתוח ותהיה זמינה בקרוב"
+      icon="⚛️"
     />
   );
 }

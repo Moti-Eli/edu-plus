@@ -1,11 +1,11 @@
 import { ComingSoon } from "@/components/coming-soon";
 
-export default function TermsPage() {
+export default function EnglishProgramPage() {
   return (
     <ComingSoon 
-      title="תנאי שימוש"
-      description="תנאי השימוש באתר יפורסמו כאן בקרוב"
-      icon="📜"
+      title="תוכנית אנגלית"
+      description="מידע נוסף על תוכנית האנגלית שלנו יפורסם כאן בקרוב"
+      icon="🇬🇧"
     />
   );
 }

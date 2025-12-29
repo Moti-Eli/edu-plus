@@ -1,11 +1,11 @@
 import { ComingSoon } from "@/components/coming-soon";
 
-export default function TermsPage() {
+export default function PrivacyPage() {
   return (
     <ComingSoon 
-      title="תנאי שימוש"
-      description="תנאי השימוש באתר יפורסמו כאן בקרוב"
-      icon="📜"
+      title="מדיניות פרטיות"
+      description="מדיניות הפרטיות שלנו תפורסם כאן בקרוב"
+      icon="🔒"
     />
   );
 }
