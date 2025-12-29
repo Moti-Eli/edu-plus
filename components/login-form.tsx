@@ -39,7 +39,7 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
-      router.push("/protected");
+      router.push("/portal");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "אירעה שגיאה");
     } finally {
@@ -51,17 +51,17 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props} dir="rtl">
       {/* לוגו וכותרת */}
       <div className="text-center mb-4">
-        <div className="flex justify-center mb-4">
+        <Link href="/" className="inline-block">
           <Image 
             src="/logo.png" 
             alt="חינוך פלוס" 
             width={180} 
             height={70}
-            className="object-contain"
+            className="object-contain mx-auto mb-4 hover:opacity-80 transition-opacity"
           />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-800">מערכת נוכחות</h1>
-        <p className="text-gray-500 text-sm">ניהול שעות עבודה למדריכים</p>
+        </Link>
+        <h1 className="text-2xl font-bold text-gray-800">כניסה לאזור אישי</h1>
+        <p className="text-gray-500 text-sm">מערכת חינוך פלוס</p>
       </div>
 
       <Card>
@@ -106,18 +106,28 @@ export function LoginForm({
                 {isLoading ? "מתחבר..." : "התחברות"}
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
-              אין לך חשבון?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4 text-blue-600"
-              >
-                הרשמה
-              </Link>
-            </div>
           </form>
+          
+          {/* הודעה למי שאין לו חשבון */}
+          <div className="mt-6 text-center text-sm text-gray-500 bg-gray-50 rounded-lg p-4">
+            <p>אין לך חשבון?</p>
+            <p className="mt-1">פנה למנהל המערכת לקבלת פרטי גישה</p>
+          </div>
         </CardContent>
       </Card>
+
+      {/* קישור חזרה לדף הבית */}
+      <div className="text-center">
+        <Link 
+          href="/"
+          className="text-gray-500 hover:text-gray-700 text-sm inline-flex items-center gap-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+          חזרה לדף הבית
+        </Link>
+      </div>
     </div>
   );
 }

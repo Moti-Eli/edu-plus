@@ -15,7 +15,7 @@ export default function Header({ userName, isAdmin }: HeaderProps) {
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/auth/login");
+    router.push("/");
   };
 
   return (
