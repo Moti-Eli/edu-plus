@@ -384,56 +384,57 @@ export default function AttendanceForm() {
         </div>
       )}
 
-
-      <div className="max-h-96 overflow-auto -mx-4 px-4">
-        <table className="w-full min-w-[900px]">
-          <thead className="bg-gray-50 sticky top-0">
-            <tr>
-              <th className="p-3 text-right">תאריך</th>
-              <th className="p-3 text-right">בית ספר</th>
-              <th className="p-3 text-right">עיר</th>
-              <th className="p-3 text-right">שעות</th>
-              <th className="p-3 text-right">הערות</th>
-              <th className="p-3 text-right">הערות מנהל</th>
-              <th className="p-3 text-right">פעולות</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRecords.length === 0 ? (
+      <div className="overflow-x-auto">
+        <div className="max-h-96 overflow-y-auto">
+          <table className="w-full min-w-[900px]">
+            <thead className="bg-gray-50 sticky top-0">
               <tr>
-                <td colSpan={7} className="p-4 text-center text-gray-400">
-                  אין דיווחים בחודש זה
-                </td>
+                <th className="p-3 text-right">תאריך</th>
+                <th className="p-3 text-right">בית ספר</th>
+                <th className="p-3 text-right">עיר</th>
+                <th className="p-3 text-right">שעות</th>
+                <th className="p-3 text-right">הערות</th>
+                <th className="p-3 text-right">הערות מנהל</th>
+                <th className="p-3 text-right">פעולות</th>
               </tr>
-            ) : (
-              filteredRecords.map((record) => (
-                <tr key={record.id} className="border-t hover:bg-gray-50">
-                  <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
-                  <td className="p-3">{record.school_name}</td>
-                  <td className="p-3 text-sm text-gray-500">{record.city}</td>
-                  <td className="p-3 font-semibold">{record.hours}</td>
-                  <td className="p-3 text-sm">{record.notes || "-"}</td>
-                  <td className="p-3 text-sm text-purple-600">{record.admin_notes || "-"}</td>
-                  <td className="p-3">
-                    {isCurrentMonth(record.date) ? (
-                      <button
-                        onClick={() => deleteRecord(record.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        🗑️
-                      </button>
-                    ) : (
-                      <span className="text-gray-300 cursor-not-allowed" title="לא ניתן למחוק דיווחים מחודשים קודמים">
-                        🔒
-                      </span>
-                    )}
+            </thead>
+            <tbody>
+              {filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-4 text-center text-gray-400">
+                    אין דיווחים בחודש זה
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredRecords.map((record) => (
+                  <tr key={record.id} className="border-t hover:bg-gray-50">
+                    <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
+                    <td className="p-3">{record.school_name}</td>
+                    <td className="p-3 text-sm text-gray-500">{record.city}</td>
+                    <td className="p-3 font-semibold">{record.hours}</td>
+                    <td className="p-3 text-sm">{record.notes || "-"}</td>
+                    <td className="p-3 text-sm text-purple-600">{record.admin_notes || "-"}</td>
+                    <td className="p-3">
+                      {isCurrentMonth(record.date) ? (
+                        <button
+                          onClick={() => deleteRecord(record.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          🗑️
+                        </button>
+                      ) : (
+                        <span className="text-gray-300 cursor-not-allowed" title="לא ניתן למחוק דיווחים מחודשים קודמים">
+                          🔒
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div> 
     </div>
   );
 }
