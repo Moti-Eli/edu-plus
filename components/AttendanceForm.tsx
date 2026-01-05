@@ -384,10 +384,10 @@ export default function AttendanceForm() {
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div className="max-h-96 overflow-y-auto">
-          <table className="w-full min-w-[900px]">
-            <thead className="bg-red-50 sticky top-0">
+          <table style={{ minWidth: '900px' }} className="w-full">
+            <thead className="bg-grey-50 sticky top-0">
               <tr>
                 <th className="p-3 text-right">תאריך</th>
                 <th className="p-3 text-right">בית ספר</th>
