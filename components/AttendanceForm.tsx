@@ -275,7 +275,7 @@ export default function AttendanceForm() {
   };
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <div className="bg-white rounded-lg border">
       <div className="p-4 bg-blue-50 border-b flex items-center justify-between">
         <h2 className="font-bold text-lg">📝 דיווח נוכחות - יום {hebrewDays[currentDay]}</h2>
         <button
