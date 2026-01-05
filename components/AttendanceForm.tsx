@@ -387,7 +387,7 @@ export default function AttendanceForm() {
       <div className="overflow-x-auto">
         <div className="max-h-96 overflow-y-auto">
           <table className="w-full min-w-[900px]">
-            <thead className="bg-gray-50 sticky top-0">
+            <thead className="bg-red-50 sticky top-0">
               <tr>
                 <th className="p-3 text-right">תאריך</th>
                 <th className="p-3 text-right">בית ספר</th>
