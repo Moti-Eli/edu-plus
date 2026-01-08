@@ -362,8 +362,8 @@ export default function AttendanceForm() {
       </div>
 
       {months.length > 0 && (
-        <div className="p-3 border-b flex items-center justify-between">
-          <div className="flex gap-2 overflow-x-auto">
+        <div className="p-2 md:p-3 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {months.map((month) => (
               <button
                 key={month}
@@ -371,7 +371,7 @@ export default function AttendanceForm() {
                 className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
                   selectedMonth === month
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 {formatMonthName(month)}
@@ -442,27 +442,15 @@ export default function AttendanceForm() {
         ) : (
           filteredRecords.map((record) => (
             <div key={record.id} className="bg-white rounded-xl p-4 border shadow-sm">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <div className="font-bold text-lg">{record.school_name}</div>
-                  <div className="text-sm text-gray-500">{record.city}</div>
-                </div>
-                <div className="text-left">
-                  <div className="text-sm text-gray-500">{new Date(record.date).toLocaleDateString("he-IL")}</div>
-                  <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold text-sm mt-1">{record.hours} שעות</div>
-                </div>
-              </div>
-              {(record.notes || record.admin_notes) && (
-                <div className="border-t pt-2 mt-2 space-y-1">
-                  {record.notes && <div className="text-sm text-gray-600">📝 {record.notes}</div>}
-                  {record.admin_notes && <div className="text-sm text-purple-600">💬 {record.admin_notes}</div>}
-                </div>
-              )}
-              <div className="flex justify-end mt-2">
+              <div className="text-sm text-gray-500 mb-2">{new Date(record.date).toLocaleDateString("he-IL")}</div>
+              <div className="font-bold text-xl text-gray-900 mb-1">{record.school_name}</div>
+              <div className="text-gray-600 mb-3">{record.city}</div>
+              <div className="flex justify-between items-center">
+                <span className="bg-blue-500 text-white px-4 py-2 rounded-full font-bold">{record.hours} שעות</span>
                 {isCurrentMonth(record.date) ? (
                   <button
                     onClick={() => deleteRecord(record.id)}
-                    className="text-red-500 hover:text-red-700 text-lg"
+                    className="bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-medium"
                   >
                     🗑️ מחק
                   </button>
@@ -470,6 +458,12 @@ export default function AttendanceForm() {
                   <span className="text-gray-400 text-sm">🔒 נעול</span>
                 )}
               </div>
+              {(record.notes || record.admin_notes) && (
+                <div className="border-t pt-3 mt-3 space-y-1">
+                  {record.notes && <div className="text-sm text-gray-600">📝 {record.notes}</div>}
+                  {record.admin_notes && <div className="text-sm text-purple-600">💬 {record.admin_notes}</div>}
+                </div>
+              )}
             </div>
           ))
         )}
