@@ -15,7 +15,7 @@ type AttendanceRecord = {
   school_name: string;
   city: string;
   date: string;
-  hours: number;
+  hours: number | "";
   notes: string;
   admin_notes: string;
 };
@@ -335,7 +335,7 @@ export default function AttendanceForm() {
                 type="number"
                 min="1"
                 value={row.hours}
-                onChange={(e) => handleRowChange(index, "hours", parseInt(e.target.value) || 1)}
+                onChange={(e) => handleRowChange(index, "hours", e.target.value === "" ? "" : parseInt(e.target.value) || 1)}
                 className="p-2 border rounded text-sm w-16"
               />
             </div>
