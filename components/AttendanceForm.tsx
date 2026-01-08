@@ -384,57 +384,88 @@ export default function AttendanceForm() {
         </div>
       )}
 
-      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div className="max-h-96 overflow-y-auto">
-          <table style={{ minWidth: '900px' }} className="w-full">
-            <thead className="bg-grey-50 sticky top-0">
+      {/* תצוגת מחשב - טבלה */}
+      <div className="hidden md:block max-h-96 overflow-y-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 sticky top-0">
+            <tr>
+              <th className="p-3 text-right">תאריך</th>
+              <th className="p-3 text-right">בית ספר</th>
+              <th className="p-3 text-right">עיר</th>
+              <th className="p-3 text-right">שעות</th>
+              <th className="p-3 text-right">הערות</th>
+              <th className="p-3 text-right">הערות מנהל</th>
+              <th className="p-3 text-right">פעולות</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRecords.length === 0 ? (
               <tr>
-                <th className="p-3 text-right">תאריך</th>
-                <th className="p-3 text-right">בית ספר</th>
-                <th className="p-3 text-right">עיר</th>
-                <th className="p-3 text-right">שעות</th>
-                <th className="p-3 text-right">הערות</th>
-                <th className="p-3 text-right">הערות מנהל</th>
-                <th className="p-3 text-right">פעולות</th>
+                <td colSpan={7} className="p-4 text-center text-gray-400">
+                  אין דיווחים בחודש זה
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-4 text-center text-gray-400">
-                    אין דיווחים בחודש זה
+            ) : (
+              filteredRecords.map((record) => (
+                <tr key={record.id} className="border-t hover:bg-gray-50">
+                  <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
+                  <td className="p-3">{record.school_name}</td>
+                  <td className="p-3 text-sm text-gray-500">{record.city}</td>
+                  <td className="p-3 font-semibold">{record.hours}</td>
+                  <td className="p-3 text-sm">{record.notes || "-"}</td>
+                  <td className="p-3 text-sm text-purple-600">{record.admin_notes || "-"}</td>
+                  <td className="p-3">
+                    {isCurrentMonth(record.date) ? (
+                      <button
+                        onClick={() => deleteRecord(record.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        🗑️
+                      </button>
+                    ) : (
+                      <span className="text-gray-300 cursor-not-allowed" title="לא ניתן למחוק דיווחים מחודשים קודמים">
+                        🔒
+                      </span>
+                    )}
                   </td>
                 </tr>
-              ) : (
-                filteredRecords.map((record) => (
-                  <tr key={record.id} className="border-t hover:bg-gray-50">
-                    <td className="p-3">{new Date(record.date).toLocaleDateString("he-IL")}</td>
-                    <td className="p-3">{record.school_name}</td>
-                    <td className="p-3 text-sm text-gray-500">{record.city}</td>
-                    <td className="p-3 font-semibold">{record.hours}</td>
-                    <td className="p-3 text-sm">{record.notes || "-"}</td>
-                    <td className="p-3 text-sm text-purple-600">{record.admin_notes || "-"}</td>
-                    <td className="p-3">
-                      {isCurrentMonth(record.date) ? (
-                        <button
-                          onClick={() => deleteRecord(record.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          🗑️
-                        </button>
-                      ) : (
-                        <span className="text-gray-300 cursor-not-allowed" title="לא ניתן למחוק דיווחים מחודשים קודמים">
-                          🔒
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div> 
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* תצוגת מובייל - כרטיסים */}
+      <div className="md:hidden max-h-96 overflow-y-auto p-3 space-y-3">
+        {filteredRecords.length === 0 ? (
+          <div className="p-4 text-center text-gray-400">אין דיווחים בחודש זה</div>
+        ) : (
+          filteredRecords.map((record) => (
+            <div key={record.id} className="bg-gray-50 rounded-lg p-4 border">
+              <div className="flex justify-between items-start mb-2">
+                <span className="font-bold text-lg">{record.school_name}</span>
+                <span className="text-sm text-gray-500">{new Date(record.date).toLocaleDateString("he-IL")}</span>
+              </div>
+              <div className="text-sm text-gray-600 mb-2">{record.city}</div>
+              <div className="flex justify-between items-center">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-semibold">{record.hours} שעות</span>
+                {isCurrentMonth(record.date) ? (
+                  <button
+                    onClick={() => deleteRecord(record.id)}
+                    className="text-red-500 hover:text-red-700 text-xl"
+                  >
+                    🗑️
+                  </button>
+                ) : (
+                  <span className="text-gray-300">🔒</span>
+                )}
+              </div>
+              {record.notes && <div className="mt-2 text-sm text-gray-500">📝 {record.notes}</div>}
+              {record.admin_notes && <div className="mt-1 text-sm text-purple-600">💬 {record.admin_notes}</div>}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
