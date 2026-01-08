@@ -436,32 +436,40 @@ export default function AttendanceForm() {
       </div>
 
       {/* תצוגת מובייל - כרטיסים */}
-      <div className="md:hidden max-h-96 overflow-y-auto p-3 space-y-3">
+      <div className="md:hidden max-h-[500px] overflow-y-auto p-3 space-y-3">
         {filteredRecords.length === 0 ? (
           <div className="p-4 text-center text-gray-400">אין דיווחים בחודש זה</div>
         ) : (
           filteredRecords.map((record) => (
-            <div key={record.id} className="bg-gray-50 rounded-lg p-4 border">
-              <div className="flex justify-between items-start mb-2">
-                <span className="font-bold text-lg">{record.school_name}</span>
-                <span className="text-sm text-gray-500">{new Date(record.date).toLocaleDateString("he-IL")}</span>
+            <div key={record.id} className="bg-white rounded-xl p-4 border shadow-sm">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <div className="font-bold text-lg">{record.school_name}</div>
+                  <div className="text-sm text-gray-500">{record.city}</div>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm text-gray-500">{new Date(record.date).toLocaleDateString("he-IL")}</div>
+                  <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold text-sm mt-1">{record.hours} שעות</div>
+                </div>
               </div>
-              <div className="text-sm text-gray-600 mb-2">{record.city}</div>
-              <div className="flex justify-between items-center">
-                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-semibold">{record.hours} שעות</span>
+              {(record.notes || record.admin_notes) && (
+                <div className="border-t pt-2 mt-2 space-y-1">
+                  {record.notes && <div className="text-sm text-gray-600">📝 {record.notes}</div>}
+                  {record.admin_notes && <div className="text-sm text-purple-600">💬 {record.admin_notes}</div>}
+                </div>
+              )}
+              <div className="flex justify-end mt-2">
                 {isCurrentMonth(record.date) ? (
                   <button
                     onClick={() => deleteRecord(record.id)}
-                    className="text-red-500 hover:text-red-700 text-xl"
+                    className="text-red-500 hover:text-red-700 text-lg"
                   >
-                    🗑️
+                    🗑️ מחק
                   </button>
                 ) : (
-                  <span className="text-gray-300">🔒</span>
+                  <span className="text-gray-400 text-sm">🔒 נעול</span>
                 )}
               </div>
-              {record.notes && <div className="mt-2 text-sm text-gray-500">📝 {record.notes}</div>}
-              {record.admin_notes && <div className="mt-1 text-sm text-purple-600">💬 {record.admin_notes}</div>}
             </div>
           ))
         )}
