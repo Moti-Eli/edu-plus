@@ -83,3 +83,21 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+/* הצגת חיצים בשדה מספר במובייל */
+input[type="number"] {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: inner-spin-button;
+  opacity: 1;
+}
+
+/* כפיית צבעים על שדות קלט */
+input, select, textarea {
+  background-color: white !important;
+  color: #111 !important;
+}
